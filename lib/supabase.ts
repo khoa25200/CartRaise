@@ -1,9 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import {
-  getSupabaseAnonKey,
-  getSupabaseServiceRoleKey,
-  getSupabaseUrl,
-} from "@/lib/env";
+import { getSupabaseServiceRoleKey, getSupabaseUrl } from "@/lib/env";
 
 let admin: SupabaseClient | null = null;
 
@@ -14,11 +10,4 @@ export function getSupabaseAdmin(): SupabaseClient {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return admin;
-}
-
-/** Anon client for optional server-side reads with RLS (or future browser use via RLS policies). */
-export function getSupabaseAnon(): SupabaseClient {
-  return createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 }

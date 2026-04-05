@@ -50,9 +50,3 @@ export function getSupabaseServiceRoleKey(): string {
   }
   return key;
 }
-
-export function getSupabaseAnonKey(): string {
-  const key = process.env.SUPABASE_ANON_KEY?.trim();
-  if (!key) throw new Error("Missing SUPABASE_ANON_KEY");
-  return key;
-}
