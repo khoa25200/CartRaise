@@ -9,7 +9,7 @@ embedded = false
 handle = "cartraise"
 
 [access_scopes]
-scopes = "read_products,write_products,read_orders"
+scopes = "read_products,write_cart"
 
 [access.admin]
 direct_api_mode = "offline"

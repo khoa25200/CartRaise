@@ -28,6 +28,12 @@ export async function GET(request: Request) {
   try {
     const state = crypto.randomBytes(16).toString("hex");
     redirectUrl = buildInstallRedirectUrl(shop, state);
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.DEBUG_OAUTH === "1"
+    ) {
+      console.log("INSTALL URL:", redirectUrl);
+    }
     const res = NextResponse.redirect(redirectUrl);
     res.cookies.set(STATE_COOKIE, state, {
       httpOnly: true,

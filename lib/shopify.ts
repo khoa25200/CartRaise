@@ -7,18 +7,21 @@ import {
 
 export { getAppUrl } from "@/lib/env";
 
-/** Shopify Admin OAuth install URL. */
+/**
+ * Shopify Admin OAuth install URL.
+ * Host must be https://{shop}/admin/oauth/authorize (shop = *.myshopify.com), never admin.shopify.com.
+ * Query segments are encodeURIComponent’d explicitly (production-safe for scope + redirect_uri).
+ */
 export function buildInstallRedirectUrl(shop: string, state: string): string {
   const { apiKey } = getShopifySecrets();
   const scopes = getScopes();
   const redirectUri = `${getAppUrl()}/api/shopify/callback`;
-  const params = new URLSearchParams({
-    client_id: apiKey,
-    scope: scopes,
-    redirect_uri: redirectUri,
-    state,
-  });
-  return `https://${shop}/admin/oauth/authorize?${params.toString()}`;
+  const query =
+    `?client_id=${encodeURIComponent(apiKey)}` +
+    `&scope=${encodeURIComponent(scopes)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&state=${encodeURIComponent(state)}`;
+  return `https://${shop}/admin/oauth/authorize${query}`;
 }
 
 /**
@@ -79,19 +82,18 @@ export async function exchangeCodeForToken(
   return res.json() as Promise<{ access_token: string; scope: string }>;
 }
 
-/** Returns canonical *.myshopify.com hostname or null if invalid. */
+/** Full shop host only: *.myshopify.com (accepts handle or full domain; rejects URLs). */
 export function normalizeShopDomain(input: string): string | null {
-  const trimmed = input.trim().toLowerCase();
-  if (!trimmed) return null;
+  let normalized = input.trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized.includes("://") || normalized.includes("/")) return null;
 
-  const host = trimmed.endsWith(".myshopify.com")
-    ? trimmed
-    : `${trimmed}.myshopify.com`;
+  if (!normalized.endsWith(".myshopify.com")) {
+    normalized = `${normalized}.myshopify.com`;
+  }
 
-  // Subdomain: letters, numbers, hyphens; must not be empty or look like a URL.
-  if (trimmed.includes("://") || trimmed.includes("/")) return null;
-  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?\.myshopify\.com$/.test(host)) {
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?\.myshopify\.com$/.test(normalized)) {
     return null;
   }
-  return host;
+  return normalized;
 }
