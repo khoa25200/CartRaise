@@ -1,0 +1,40 @@
+# CartRaise / Conversion Booster Lite
+# Đồng bộ lên Partners: shopify app deploy
+# client_id = Client ID trong Partners (cùng giá trị SHOPIFY_API_KEY).
+
+name = "Conversion Booster Lite"
+client_id = "ffffffffffffffffffffffffffffffff"
+application_url = "https://cart-raise.vercel.app"
+embedded = false
+handle = "cartraise"
+
+[access_scopes]
+scopes = "read_products,write_products,read_orders"
+
+[access.admin]
+direct_api_mode = "offline"
+
+[auth]
+redirect_urls = [
+  "https://cart-raise.vercel.app/api/shopify/callback",
+  "http://localhost:3000/api/shopify/callback",
+  "http://127.0.0.1:3000/api/shopify/callback",
+]
+
+[webhooks]
+api_version = "2026-01"
+
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+compliance_topics = [
+  "customers/redact",
+  "customers/data_request",
+  "shop/redact",
+]
+uri = "/api/webhooks/shopify"
+
+[app_preferences]
+url = "https://cart-raise.vercel.app/dashboard"
+
+[build]
+automatically_update_urls_on_dev = false
