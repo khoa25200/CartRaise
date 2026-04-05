@@ -11,11 +11,15 @@ const COOKIE_MAX_AGE = 600;
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawShop = searchParams.get("shop");
-  const shop = rawShop ? normalizeShopDomain(rawShop) : null;
+  // Smoke test / Vercel: GET /api/shopify/auth → { ok: true }
+  if (rawShop === null || rawShop.trim() === "") {
+    return NextResponse.json({ ok: true });
+  }
 
+  const shop = normalizeShopDomain(rawShop);
   if (!shop) {
     return NextResponse.json(
-      { error: "Missing or invalid shop (use *.myshopify.com or store handle)" },
+      { error: "Invalid shop (use *.myshopify.com or store handle)" },
       { status: 400 }
     );
   }
