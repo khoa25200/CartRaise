@@ -5,7 +5,7 @@ import {
   normalizeShopDomain,
 } from "@/lib/shopify";
 
-const STATE_COOKIE = "cbl_oauth_state";
+const STATE_COOKIE = "shopify_oauth_state";
 const COOKIE_MAX_AGE = 600;
 
 export async function GET(request: Request) {
@@ -15,21 +15,26 @@ export async function GET(request: Request) {
 
   if (!shop) {
     return NextResponse.json(
-      { error: "Missing or invalid shop parameter" },
+      { error: "Missing or invalid shop (use *.myshopify.com or store handle)" },
       { status: 400 }
     );
   }
 
-  const state = crypto.randomBytes(16).toString("hex");
-  const redirectUrl = buildInstallRedirectUrl(shop, state);
-
-  const res = NextResponse.redirect(redirectUrl);
-  res.cookies.set(STATE_COOKIE, state, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: COOKIE_MAX_AGE,
-    path: "/",
-  });
-  return res;
+  let redirectUrl: string;
+  try {
+    const state = crypto.randomBytes(16).toString("hex");
+    redirectUrl = buildInstallRedirectUrl(shop, state);
+    const res = NextResponse.redirect(redirectUrl);
+    res.cookies.set(STATE_COOKIE, state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: COOKIE_MAX_AGE,
+      path: "/",
+    });
+    return res;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Configuration error";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

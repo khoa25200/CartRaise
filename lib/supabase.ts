@@ -1,16 +1,24 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  getSupabaseAnonKey,
+  getSupabaseServiceRoleKey,
+  getSupabaseUrl,
+} from "@/lib/env";
 
 let admin: SupabaseClient | null = null;
 
+/** Admin client for server routes (OAuth persistence, RLS bypass). */
 export function getSupabaseAdmin(): SupabaseClient {
   if (admin) return admin;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
-  admin = createClient(url, key, {
+  admin = createClient(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return admin;
+}
+
+/** Anon client for optional server-side reads with RLS (or future browser use via RLS policies). */
+export function getSupabaseAnon(): SupabaseClient {
+  return createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }

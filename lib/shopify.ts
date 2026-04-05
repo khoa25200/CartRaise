@@ -1,11 +1,30 @@
 import crypto from "crypto";
+import {
+  getAppUrl,
+  getScopes,
+  getShopifySecrets,
+} from "@/lib/env";
 
-export function getAppUrl(): string {
-  const url = process.env.NEXT_PUBLIC_APP_URL;
-  if (!url) throw new Error("Missing NEXT_PUBLIC_APP_URL");
-  return url.replace(/\/$/, "");
+export { getAppUrl } from "@/lib/env";
+
+/** Shopify Admin OAuth install URL. */
+export function buildInstallRedirectUrl(shop: string, state: string): string {
+  const { apiKey } = getShopifySecrets();
+  const scopes = getScopes();
+  const redirectUri = `${getAppUrl()}/api/shopify/callback`;
+  const params = new URLSearchParams({
+    client_id: apiKey,
+    scope: scopes,
+    redirect_uri: redirectUri,
+    state,
+  });
+  return `https://${shop}/admin/oauth/authorize?${params.toString()}`;
 }
 
+/**
+ * Verifies OAuth callback query HMAC (Admin API).
+ * Excludes `hmac` and `signature` from the message; keys sorted alphabetically.
+ */
 export function verifyShopifyOAuthQuery(
   query: Record<string, string>,
   secret: string
@@ -34,35 +53,15 @@ export function verifyShopifyOAuthQuery(
   }
 }
 
-export function buildInstallRedirectUrl(shop: string, state: string): string {
-  const apiKey = process.env.SHOPIFY_API_KEY;
-  const scopes = process.env.SHOPIFY_SCOPES;
-  if (!apiKey || !scopes) {
-    throw new Error("Missing SHOPIFY_API_KEY or SHOPIFY_SCOPES");
-  }
-  const redirectUri = `${getAppUrl()}/api/shopify/callback`;
-  const params = new URLSearchParams({
-    client_id: apiKey,
-    scope: scopes,
-    redirect_uri: redirectUri,
-    state,
-  });
-  return `https://${shop}/admin/oauth/authorize?${params.toString()}`;
-}
-
 export async function exchangeCodeForToken(
   shop: string,
   code: string
 ): Promise<{ access_token: string; scope: string }> {
-  const apiKey = process.env.SHOPIFY_API_KEY;
-  const secret = process.env.SHOPIFY_API_SECRET;
-  if (!apiKey || !secret) {
-    throw new Error("Missing SHOPIFY_API_KEY or SHOPIFY_API_SECRET");
-  }
+  const { apiKey, apiSecret } = getShopifySecrets();
 
   const body = new URLSearchParams({
     client_id: apiKey,
-    client_secret: secret,
+    client_secret: apiSecret,
     code,
   });
 
@@ -80,10 +79,19 @@ export async function exchangeCodeForToken(
   return res.json() as Promise<{ access_token: string; scope: string }>;
 }
 
+/** Returns canonical *.myshopify.com hostname or null if invalid. */
 export function normalizeShopDomain(input: string): string | null {
   const trimmed = input.trim().toLowerCase();
   if (!trimmed) return null;
-  if (trimmed.endsWith(".myshopify.com")) return trimmed;
-  if (/^[a-z0-9-]+$/.test(trimmed)) return `${trimmed}.myshopify.com`;
-  return null;
+
+  const host = trimmed.endsWith(".myshopify.com")
+    ? trimmed
+    : `${trimmed}.myshopify.com`;
+
+  // Subdomain: letters, numbers, hyphens; must not be empty or look like a URL.
+  if (trimmed.includes("://") || trimmed.includes("/")) return null;
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?\.myshopify\.com$/.test(host)) {
+    return null;
+  }
+  return host;
 }
