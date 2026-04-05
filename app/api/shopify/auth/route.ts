@@ -32,7 +32,8 @@ export async function GET(request: Request) {
       process.env.NODE_ENV === "development" ||
       process.env.DEBUG_OAUTH === "1"
     ) {
-      console.log("INSTALL URL:", redirectUrl);
+      console.log("SHOP (normalized):", shop);
+      console.log("INSTALL URL (first redirect from app):", redirectUrl);
     }
     const res = NextResponse.redirect(redirectUrl);
     res.cookies.set(STATE_COOKIE, state, {

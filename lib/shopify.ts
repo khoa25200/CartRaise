@@ -9,10 +9,17 @@ export { getAppUrl } from "@/lib/env";
 
 /**
  * Shopify Admin OAuth install URL.
- * Host must be https://{shop}/admin/oauth/authorize (shop = *.myshopify.com), never admin.shopify.com.
+ * First hop: https://{shop}/admin/oauth/authorize (shop = *.myshopify.com).
+ * Shopify may then 302 to admin.shopify.com/store/... — that is their platform, not this app.
  * Query segments are encodeURIComponent’d explicitly (production-safe for scope + redirect_uri).
  */
 export function buildInstallRedirectUrl(shop: string, state: string): string {
+  if (
+    !shop.endsWith(".myshopify.com") ||
+    shop.includes("admin.shopify.com")
+  ) {
+    throw new Error("OAuth install requires shop as *.myshopify.com host only");
+  }
   const { apiKey } = getShopifySecrets();
   const scopes = getScopes();
   const redirectUri = `${getAppUrl()}/api/shopify/callback`;
@@ -82,18 +89,19 @@ export async function exchangeCodeForToken(
   return res.json() as Promise<{ access_token: string; scope: string }>;
 }
 
-/** Full shop host only: *.myshopify.com (accepts handle or full domain; rejects URLs). */
+/** Canonical *.myshopify.com only — rejects admin host paste, full URLs, paths. */
 export function normalizeShopDomain(input: string): string | null {
-  let normalized = input.trim().toLowerCase();
-  if (!normalized) return null;
-  if (normalized.includes("://") || normalized.includes("/")) return null;
+  let shop = input.trim().toLowerCase();
+  if (!shop) return null;
+  if (shop.includes("://") || shop.includes("/")) return null;
+  if (shop.includes("admin.shopify.com")) return null;
 
-  if (!normalized.endsWith(".myshopify.com")) {
-    normalized = `${normalized}.myshopify.com`;
+  if (!shop.endsWith(".myshopify.com")) {
+    shop = `${shop}.myshopify.com`;
   }
 
-  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?\.myshopify\.com$/.test(normalized)) {
+  if (!/^[a-z0-9-]+\.myshopify\.com$/.test(shop)) {
     return null;
   }
-  return normalized;
+  return shop;
 }
