@@ -1,6 +1,4 @@
-# CartRaise — Private (install via link), Embedded app
-# AOV: cart progress bar + free gift
-# Ref: https://shopify.dev/docs/apps/tools/cli/configuration
+# Alias config — same as shopify.app.toml. Use: shopify app config use shopify.app.cartrise.toml
 
 client_id = "7f45625bd3dd3dddc71467d8bdeb3f78"
 name = "CartRaise"

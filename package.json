@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "shopify": "shopify",
+    "shopify:deploy": "shopify app deploy",
+    "shopify:config:link": "shopify app config link",
+    "shopify:config:prod": "shopify app config use shopify.app.toml"
   },
   "dependencies": {
     "@shopify/polaris": "^12.27.0",
@@ -17,6 +21,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
+    "@shopify/cli": "^3.93.0",
     "@types/node": "^22.10.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

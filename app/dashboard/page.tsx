@@ -46,7 +46,7 @@ export default function DashboardPage() {
 
   return (
     <AppProvider i18n={enTranslations}>
-      <Page title="Conversion Booster Lite" narrowWidth>
+      <Page title="CartRaise" narrowWidth>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <CampaignPreview campaign={campaign} shopDomain={shopDomain} />
           <CampaignForm shopDomain={shopDomain} onSaved={refreshCampaign} />
