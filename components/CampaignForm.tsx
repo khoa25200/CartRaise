@@ -9,6 +9,7 @@ import {
   Select,
   TextField,
 } from "@shopify/polaris";
+import { InstallConnectButton } from "@/components/InstallConnectButton";
 
 type Props = {
   shopDomain: string;
@@ -23,11 +24,15 @@ export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
   const [isActive, setIsActive] = useState("true");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showInstallCta, setShowInstallCta] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const formLocked = shopInstalled === false;
 
   const load = useCallback(async () => {
     if (!shopDomain) return;
     setError(null);
+    setShowInstallCta(false);
     try {
       const res = await fetch(
         `/api/campaign?shop=${encodeURIComponent(shopDomain)}`
@@ -60,6 +65,7 @@ export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
 
   const handleSave = async () => {
     setError(null);
+    setShowInstallCta(false);
     setSuccess(false);
     if (!shopDomain.trim()) {
       setError("Missing shop. Open the dashboard with ?shop=your-store.myshopify.com");
@@ -92,9 +98,10 @@ export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
         install_path?: string;
       };
       if (!res.ok) {
-        if (data.code === "SHOP_NOT_INSTALLED" && data.install_path) {
+        if (data.code === "SHOP_NOT_INSTALLED") {
+          setShowInstallCta(true);
           setError(
-            `${data.error ?? "Shop not installed"} — use Install in the preview card or open ${data.install_path} in the top window (target _top).`
+            "This store isn’t connected yet. Use Connect store, finish OAuth, then save again."
           );
         } else {
           setError(data.error ?? "Save failed");
@@ -115,8 +122,21 @@ export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
       <div style={{ padding: "1rem" }}>
         {error ? (
           <div style={{ marginBottom: "1rem" }}>
-            <Banner tone="critical" onDismiss={() => setError(null)}>
-              {error}
+            <Banner
+              tone="critical"
+              onDismiss={() => {
+                setError(null);
+                setShowInstallCta(false);
+              }}
+            >
+              <p>{error}</p>
+              {showInstallCta && shopDomain ? (
+                <div style={{ marginTop: "0.75rem" }}>
+                  <InstallConnectButton shopDomain={shopDomain}>
+                    Connect store
+                  </InstallConnectButton>
+                </div>
+              ) : null}
             </Banner>
           </div>
         ) : null}
@@ -136,6 +156,7 @@ export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
             autoComplete="off"
             min={0}
             step={0.01}
+            disabled={formLocked}
           />
           <TextField
             label="Gift variant ID"
@@ -143,6 +164,7 @@ export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
             onChange={setGiftVariantId}
             autoComplete="off"
             helpText="Numeric variant ID from Shopify admin product variant URL."
+            disabled={formLocked}
           />
           <Select
             label="Campaign status"
@@ -152,12 +174,13 @@ export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
             ]}
             value={isActive}
             onChange={setIsActive}
+            disabled={formLocked}
           />
           <Button
             variant="primary"
             onClick={handleSave}
             loading={loading}
-            disabled={shopInstalled === false}
+            disabled={formLocked}
           >
             Save campaign
           </Button>

@@ -1,6 +1,10 @@
 "use client";
 
-import { Banner, Card, Text } from "@shopify/polaris";
+import { Banner, Card, EmptyState, Text } from "@shopify/polaris";
+import {
+  getOAuthInstallUrl,
+  navigateToShopifyOAuth,
+} from "@/lib/shopify-install-nav";
 
 export type CampaignPreviewData = {
   threshold_amount: number;
@@ -21,10 +25,6 @@ export function CampaignPreview({
   shopDomain,
   shopInstalled,
 }: Props) {
-  const installHref = shopDomain
-    ? `/api/shopify/auth?shop=${encodeURIComponent(shopDomain)}`
-    : "";
-
   return (
     <Card>
       <div style={{ padding: "1rem" }}>
@@ -33,26 +33,40 @@ export function CampaignPreview({
         </Text>
         <div style={{ marginTop: "0.75rem" }}>
           {!shopDomain ? (
-            <Banner tone="warning">
-              Add <code>?shop=your-store.myshopify.com</code> to the URL after
-              installing the app.
-            </Banner>
-          ) : shopInstalled === false ? (
-            <Banner tone="critical" title="App install not completed">
+            <EmptyState
+              heading="Open CartRaise from Shopify admin"
+              image="/install-empty-state.svg"
+              imageContained
+            >
               <p>
-                Open the install link → merchant approves scopes → Shopify
-                redirects to <code>/api/shopify/callback</code>, which saves the
-                shop in Supabase. Skipping OAuth leaves no shop row, so saving
-                the campaign fails.
+                This screen needs your store context. Install or open the app
+                from <strong>Settings → Apps and sales channels</strong> so the
+                URL includes <code>shop</code> (and <code>host</code> when
+                embedded).
               </p>
-              <p style={{ marginTop: "0.5rem" }}>
-                <a href={installHref} target="_top" rel="noreferrer">
-                  Install or reconnect CartRaise for {shopDomain}
-                </a>{" "}
-                (<code>target=&quot;_top&quot;</code> breaks out of the admin
-                iframe for OAuth).
+            </EmptyState>
+          ) : shopInstalled === false ? (
+            <EmptyState
+              heading="Connect CartRaise to this store"
+              image="/install-empty-state.svg"
+              imageContained
+              action={{
+                content: "Connect store",
+                onAction: () =>
+                  navigateToShopifyOAuth(getOAuthInstallUrl(shopDomain)),
+              }}
+              footerContent={
+                <p style={{ marginTop: "0.5rem" }}>
+                  You’ll approve app access, then Shopify returns you here. Uses
+                  the same browser window (Shopify admin navigation pattern).
+                </p>
+              }
+            >
+              <p>
+                Link <strong>{shopDomain}</strong> so CartRaise can store your
+                settings and use the scopes you approved in the Partner app.
               </p>
-            </Banner>
+            </EmptyState>
           ) : shopInstalled === true && !campaign ? (
             <Banner tone="info">
               No campaign saved yet. Set threshold and gift variant, then save.
