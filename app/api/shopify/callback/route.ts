@@ -7,6 +7,8 @@ import {
   verifyShopifyOAuthQuery,
 } from "@/lib/shopify";
 
+export const runtime = "nodejs";
+
 const STATE_COOKIE = "shopify_oauth_state";
 
 export async function GET(request: Request) {
@@ -81,8 +83,9 @@ export async function GET(request: Request) {
   let base: string;
   try {
     base = getAppUrl();
-  } catch {
-    base = url.origin;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "SHOPIFY_APP_URL not configured";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 
   const dashboard = `${base}/dashboard?shop=${encodeURIComponent(shop)}`;

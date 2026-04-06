@@ -5,6 +5,8 @@ import {
   normalizeShopDomain,
 } from "@/lib/shopify";
 
+export const runtime = "nodejs";
+
 const STATE_COOKIE = "shopify_oauth_state";
 const COOKIE_MAX_AGE = 600;
 

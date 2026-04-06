@@ -6,6 +6,11 @@ export function getAppUrl(): string {
   if (explicit) {
     return explicit.replace(/\/$/, "");
   }
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Set SHOPIFY_APP_URL (and NEXT_PUBLIC_APP_URL) on Vercel so OAuth redirect_uri matches Partners"
+    );
+  }
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {
     const host = vercel.replace(/^https?:\/\//, "").replace(/\/$/, "");

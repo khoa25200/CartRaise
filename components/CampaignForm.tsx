@@ -59,7 +59,11 @@ export function CampaignForm({ shopDomain, onSaved }: Props) {
   const handleSave = async () => {
     setError(null);
     setSuccess(false);
-    const thresholdNum = parseFloat(threshold);
+    if (!shopDomain.trim()) {
+      setError("Missing shop. Open the dashboard with ?shop=your-store.myshopify.com");
+      return;
+    }
+    const thresholdNum = parseFloat(threshold.replace(",", "."));
     if (!Number.isFinite(thresholdNum) || thresholdNum <= 0) {
       setError("Enter a valid threshold amount.");
       return;

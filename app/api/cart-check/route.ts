@@ -2,9 +2,24 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { calculateCartProgress } from "@/lib/logic";
 import { normalizeShopDomain } from "@/lib/shopify";
-import type { CartCheckInput } from "@/types";
-
 export const dynamic = "force-dynamic";
+
+type CartCheckJson = Record<string, unknown>;
+
+function parseCartTotal(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const n = parseFloat(value.trim().replace(",", "."));
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function shopFromBody(value: unknown): string | null {
+  if (value == null) return null;
+  const s = typeof value === "string" ? value.trim() : String(value).trim();
+  return s ? normalizeShopDomain(s) : null;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,9 +32,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: Request) {
-  let body: CartCheckInput;
+  let body: CartCheckJson;
   try {
-    body = (await request.json()) as CartCheckInput;
+    body = (await request.json()) as CartCheckJson;
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON" },
@@ -27,13 +42,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const shopDomain = body.shop_domain
-    ? normalizeShopDomain(body.shop_domain)
-    : null;
-  const cartTotal =
-    typeof body.cart_total === "number" && !Number.isNaN(body.cart_total)
-      ? body.cart_total
-      : NaN;
+  const shopDomain = shopFromBody(body.shop_domain);
+  const cartTotal = parseCartTotal(body.cart_total);
 
   if (!shopDomain || !Number.isFinite(cartTotal)) {
     return NextResponse.json(

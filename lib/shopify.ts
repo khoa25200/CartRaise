@@ -100,7 +100,7 @@ export function normalizeShopDomain(input: string): string | null {
     shop = `${shop}.myshopify.com`;
   }
 
-  if (!/^[a-z0-9-]+\.myshopify\.com$/.test(shop)) {
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?\.myshopify\.com$/.test(shop)) {
     return null;
   }
   return shop;
