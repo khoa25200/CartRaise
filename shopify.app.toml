@@ -2,7 +2,7 @@
 # AOV: cart progress bar + free gift
 # Ref: https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "7f45625bd3dd3dddc71467d8bdeb3f78"
+client_id = "7f45bd3dd3dddc71467d8bdeb3f78"
 name = "CartRaise"
 application_url = "https://cart-raise.vercel.app/"
 embedded = true

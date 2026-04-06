@@ -1,6 +1,6 @@
 # Alias config — same as shopify.app.toml. Use: shopify app config use shopify.app.cartrise.toml
 
-client_id = "7f45625bd3dd3dddc71467d8bdeb3f78"
+client_id = "7f45625bd3dd31467d8bdeb3f78"
 name = "CartRaise"
 application_url = "https://cart-raise.vercel.app/"
 embedded = true
