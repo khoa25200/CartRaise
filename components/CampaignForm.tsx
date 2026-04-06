@@ -12,10 +12,12 @@ import {
 
 type Props = {
   shopDomain: string;
+  /** false = shop row missing in DB until OAuth completes */
+  shopInstalled: boolean | null;
   onSaved: () => void;
 };
 
-export function CampaignForm({ shopDomain, onSaved }: Props) {
+export function CampaignForm({ shopDomain, shopInstalled, onSaved }: Props) {
   const [threshold, setThreshold] = useState("");
   const [giftVariantId, setGiftVariantId] = useState("");
   const [isActive, setIsActive] = useState("true");
@@ -84,9 +86,19 @@ export function CampaignForm({ shopDomain, onSaved }: Props) {
           is_active: isActive === "true",
         }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        code?: string;
+        install_path?: string;
+      };
       if (!res.ok) {
-        setError(data.error ?? "Save failed");
+        if (data.code === "SHOP_NOT_INSTALLED" && data.install_path) {
+          setError(
+            `${data.error ?? "Shop not installed"} — use Install in the preview card or open ${data.install_path} in the top window (target _top).`
+          );
+        } else {
+          setError(data.error ?? "Save failed");
+        }
         return;
       }
       setSuccess(true);
@@ -141,7 +153,12 @@ export function CampaignForm({ shopDomain, onSaved }: Props) {
             value={isActive}
             onChange={setIsActive}
           />
-          <Button variant="primary" onClick={handleSave} loading={loading}>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            loading={loading}
+            disabled={shopInstalled === false}
+          >
             Save campaign
           </Button>
         </FormLayout>

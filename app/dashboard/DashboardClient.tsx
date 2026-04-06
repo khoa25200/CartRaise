@@ -21,10 +21,13 @@ export function DashboardClient() {
   );
 
   const [campaign, setCampaign] = useState<CampaignPreviewData>(null);
+  /** null = not loaded yet; false = OAuth never saved shop to Supabase */
+  const [shopInstalled, setShopInstalled] = useState<boolean | null>(null);
 
   const refreshCampaign = useCallback(async () => {
     if (!shopDomain) {
       setCampaign(null);
+      setShopInstalled(null);
       return;
     }
     try {
@@ -33,12 +36,19 @@ export function DashboardClient() {
       );
       const data = (await res.json()) as {
         campaign?: CampaignPreviewData;
+        shop_installed?: boolean;
+        error?: string;
       };
       if (res.ok) {
         setCampaign(data.campaign ?? null);
+        setShopInstalled(Boolean(data.shop_installed));
+      } else {
+        setCampaign(null);
+        setShopInstalled(null);
       }
     } catch {
       setCampaign(null);
+      setShopInstalled(null);
     }
   }, [shopDomain]);
 
@@ -50,8 +60,16 @@ export function DashboardClient() {
     <AppProvider i18n={enTranslations}>
       <Page title="CartRaise" narrowWidth>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <CampaignPreview campaign={campaign} shopDomain={shopDomain} />
-          <CampaignForm shopDomain={shopDomain} onSaved={refreshCampaign} />
+          <CampaignPreview
+            campaign={campaign}
+            shopDomain={shopDomain}
+            shopInstalled={shopInstalled}
+          />
+          <CampaignForm
+            shopDomain={shopDomain}
+            shopInstalled={shopInstalled}
+            onSaved={refreshCampaign}
+          />
         </div>
       </Page>
     </AppProvider>

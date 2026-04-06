@@ -45,7 +45,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: shopErr.message }, { status: 500 });
   }
   if (!shop) {
-    return NextResponse.json({ campaign: null });
+    return NextResponse.json({
+      campaign: null,
+      shop_installed: false,
+    });
   }
 
   const { data: campaign, error: campErr } = await supabase
@@ -58,7 +61,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: campErr.message }, { status: 500 });
   }
 
-  return NextResponse.json({ campaign });
+  return NextResponse.json({
+    campaign,
+    shop_installed: true,
+  });
 }
 
 export async function POST(request: Request) {
@@ -113,8 +119,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: shopErr.message }, { status: 500 });
   }
   if (!shop) {
+    const installPath = `/api/shopify/auth?shop=${encodeURIComponent(shopDomain)}`;
     return NextResponse.json(
-      { error: "Shop not installed" },
+      {
+        error:
+          "Shop not in database — finish OAuth install first (Merchant approves app, callback saves the shop).",
+        code: "SHOP_NOT_INSTALLED",
+        install_path: installPath,
+      },
       { status: 404 }
     );
   }
